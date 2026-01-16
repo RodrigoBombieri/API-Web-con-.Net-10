@@ -25,16 +25,20 @@ namespace SistemaActivosDigitales.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Vehiculo>>> GetVehiculos()
+        public async Task<ActionResult<IEnumerable<VehiculoReadDto>>> GetVehiculos()
         {
             var vehiculos = await _context.Vehiculos.ToListAsync();
             // Esto es solo para probar que el navegador recibe datos
-            return Ok(_mapper.Map<List<VehiculoReadDto>>(vehiculos));
+            // Devuelve la lista de Vehiculo mapeada a una lista de VehiculoReadDto
+            // Es decir devuelve un VehiculoReadDto por cada Vehiculo en la lista
+            // Uso IEnumerable en lugar de list para mayor flexibilidad
+            // Por ejemplo, IEnumerable permite devolver diferentes tipos de colecciones
+            return Ok(_mapper.Map<IEnumerable<VehiculoReadDto>>(vehiculos));
         }
 
         // GET: api/Vehiculo/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Vehiculo>> GetVehiculo(int id)
+        public async Task<ActionResult<VehiculoReadDto>> GetVehiculo(int id)
         {
             var vehiculo = await _context.Vehiculos.FindAsync(id);
 
@@ -49,14 +53,15 @@ namespace SistemaActivosDigitales.Controllers
         // PUT: api/Vehiculo/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutVehiculo(int id, Vehiculo vehiculo)
+        public async Task<IActionResult> PutVehiculo(int id, VehiculoCreateDto dto)
         {
-            if (id != vehiculo.Id)
-            {
-                return BadRequest();
-            }
+            var vehiculoExistente = await _context.Vehiculos.FindAsync(id);
+            if (vehiculoExistente == null) return NotFound();
 
-            _context.Entry(vehiculo).State = EntityState.Modified;
+            // Mapeo: vuelca los datos del DTO sobre la entidad que ya existe en la DB
+            // La funcion Map asigna los valores de las propiedades del dto
+            // a las propiedades correspondientes de la entidad
+            _mapper.Map(dto, vehiculoExistente);
 
             try
             {
@@ -64,14 +69,8 @@ namespace SistemaActivosDigitales.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!VehiculoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!VehiculoExists(id)) return NotFound();
+                else throw;
             }
 
             return NoContent();
@@ -80,7 +79,7 @@ namespace SistemaActivosDigitales.Controllers
         // POST: api/Vehiculo
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Vehiculo>> PostVehiculo(VehiculoCreateDto dto)
+        public async Task<ActionResult<VehiculoReadDto>> PostVehiculo(VehiculoCreateDto dto)
         {
             // 1. Mapeo de DTO -> Entidad
             var vehiculo = _mapper.Map<Vehiculo>(dto);
@@ -90,6 +89,9 @@ namespace SistemaActivosDigitales.Controllers
 
             var lecturaDto = _mapper.Map<VehiculoReadDto>(vehiculo);
             // CreatedAtAction: Devuelve un código 201 junto con la ubicación del nuevo recurso
+            // El primer parámetro es el nombre del método GET para obtener este recurso individual
+            // El segundo parámetro es un objeto anónimo que contiene los parámetros de ruta necesarios (en este caso, el id)
+            // El tercer parámetro es el DTO que se devolverá en el cuerpo de la respuesta
             return CreatedAtAction(nameof(GetVehiculos), new { id = vehiculo.Id }, lecturaDto);
         }
 
@@ -98,10 +100,7 @@ namespace SistemaActivosDigitales.Controllers
         public async Task<IActionResult> DeleteVehiculo(int id)
         {
             var vehiculo = await _context.Vehiculos.FindAsync(id);
-            if (vehiculo == null)
-            {
-                return NotFound();
-            }
+            if (vehiculo == null) return NotFound();
 
             _context.Vehiculos.Remove(vehiculo);
             await _context.SaveChangesAsync();

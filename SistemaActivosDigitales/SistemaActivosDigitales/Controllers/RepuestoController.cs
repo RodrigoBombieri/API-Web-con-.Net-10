@@ -40,14 +40,12 @@ namespace SistemaActivosDigitales.Controllers
 
         // GET: api/Repuesto/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Repuesto>> GetRepuesto(int id)
+        public async Task<ActionResult<RepuestoReadDto>> GetRepuesto(int id)
         {
             var repuesto = await _context.Repuestos.FindAsync(id);
 
-            if (repuesto == null)
-            {
-                return NotFound();
-            }
+            if (repuesto == null) return NotFound();
+
             // Devolvemos el DTO en lugar de la entidad directamente
             return Ok(_mapper.Map<RepuestoReadDto>(repuesto));
         }
@@ -60,16 +58,9 @@ namespace SistemaActivosDigitales.Controllers
             // 1. Buscar la entidad existente en la base de datos
             var repuestoExistente = await _context.Repuestos.FindAsync(id);
 
-            if (repuestoExistente == null)
-            {
-                return NotFound();
-            }
-
-            // Mapeo manual: actualizas campo por campo
-            repuestoExistente.NombreRepuesto = dto.NombreRepuesto;
-            repuestoExistente.CodigoParte = dto.CodigoParte;
-            repuestoExistente.PrecioUnitario = dto.PrecioUnitario;
-            repuestoExistente.StockDisponible = dto.StockDisponible;
+            if (repuestoExistente == null) return NotFound();
+            // 2. Mapear los cambios del DTO a la entidad existente
+            _mapper.Map(dto, repuestoExistente);
 
             try
             {
