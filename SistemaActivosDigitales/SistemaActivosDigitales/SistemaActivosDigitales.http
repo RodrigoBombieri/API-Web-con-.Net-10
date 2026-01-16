@@ -1,0 +1,6 @@
+@SistemaActivosDigitales_HostAddress = http://localhost:5207
+
+GET {{SistemaActivosDigitales_HostAddress}}/home/
+Accept: application/json
+
+###

@@ -1,0 +1,12 @@
+﻿@using SistemaActivosDigitales.Models
+@model List<Vehiculo>
+
+<table>
+    @foreach (var v in Model)
+    {
+        <tr>
+            <td>@v.Marca</td>
+            <td>@v.Modelo</td>
+        </tr>
+    }
+</table>
