@@ -10,6 +10,7 @@ public class MappingProfile : Profile
         CreateMap<VehiculoCreateDto, Vehiculo>();
         CreateMap<RepuestoCreateDto, Repuesto>();
         CreateMap<OrdenServicioCreateDto, OrdenServicio>();
+        CreateMap<DetalleRepuestoCreateDto, DetalleRepuesto>();
 
         // Caso 2: De la Entidad al DTO (Para leer)
         CreateMap<Vehiculo, VehiculoReadDto>();
@@ -19,6 +20,8 @@ public class MappingProfile : Profile
                 opt => opt.MapFrom(src => src.EstadoActual.ToString())) // Convierte el enum a su nombre como string
             .ForMember(dest => dest.VehiculoInfo, // Mapea la info del vehículo en un solo string
                 opt => opt.MapFrom(src => $"{src.Vehiculo.Marca} {src.Vehiculo.Modelo} ({src.Vehiculo.Placa})")); // Formatea la info del vehículo
-
+        CreateMap<DetalleRepuesto, DetalleRepuestoReadDto>()
+            .ForMember(dest => dest.NombreRepuesto, opt => opt.MapFrom(src => src.Repuesto.NombreRepuesto));
+            // Mapea el nombre del repuesto desde la entidad relacionada
     }
 }
